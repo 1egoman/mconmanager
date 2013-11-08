@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from optparse import OptionParser
-import json, os, time, pty, urllib2
+import json, os, time, urllib2
 import subprocess as sp
 
 import config_handler
@@ -11,6 +11,58 @@ import server as srvr
 class app(object):
   SERVERLOC = "/home/ryan/Desktop/mcd/servers"
   STARTSCRIPT = "launch.sh"
+
+  DEFAULTCONFIGLINES = """
+
+{
+  "ads": [],
+  "plugin-dict": {
+    "essentials": "http://dev.bukkit.org/media/files/748/504/Essentials.zip",
+    "pex": "http://dev.bukkit.org/media/files/742/103/PermissionsEx.jar",
+    "worldedit": "http://dev.bukkit.org/media/files/739/932/worldedit-5.5.8.zip"
+  },
+  "server-list": {},
+  "server-location": "%LOCATION",
+  "server-startscript-name": "launch.sh",
+  "server-types": {
+    "bukkit": {
+      "defaults": {
+        "display-ads": true,
+        "seed": false,
+        "type": "bukkit",
+        "version": "1.6.4",
+        "default-plugins": []
+      },
+      "is-vanilla": false,
+      "location": "http://cbukk.it/latest-rb/craftbukkit.jar",
+      "use-plugins": true
+    },
+    "spigot": {
+      "defaults": {
+        "display-ads": true,
+        "seed": false,
+        "type": "spigot",
+        "version": "1.6.4",
+        "default-plugins": []
+      },
+      "is-vanilla": false,
+      "location": "http://ci.md-5.net/job/Spigot/lastBuild/artifact/Spigot-Server/target/spigot.jar",
+      "use-plugins": true
+    },
+    "vanilla": {
+      "defaults": {
+        "display-ads": true,
+        "seed": false,
+        "type": "vanilla",
+        "version": "1.7.2"
+      },
+      "is-vanilla": true,
+      "location": "https://s3.amazonaws.com/Minecraft.Download/versions/%VERSION/minecraft_server.%VERSION.jar",
+      "use-plugins": false
+    }
+  }
+}
+"""
 
   def provide_output(self, server, options, args):
     
@@ -51,16 +103,41 @@ class app(object):
       print "Version:", s['version']
 
 
+  def reset_config(self):
+
+    # see if a config file already exists
+    if os.path.exists("config.json"):
+      ans = raw_input("A config file already exists. It will be backed up as config.bkp.json. Continue? (y or n)").lower()
+      if not (ans == "y" or ans == "yes"): return False
+      try:
+        import shutil
+        shutil.copy("config.json", "config.bkp.json")
+
+      # eg. src and dest are the same file
+      except shutil.Error as e:
+          print 'Error: %s' % e
+          return False
+
+      # eg. source or destination doesn't exist
+      except IOError as e:
+          print 'Error: %s' % e.strerror
+          return False
+
+    # reset config file for default
+    print "Creating config.json..."
+
+    # get server location
+    loc = raw_input("Where to put server files (server's location): ")
+    if not os.path.exists(loc): os.mkdir(loc)
+
+    with open("config.json", "w") as f:
+      f.write( self.DEFAULTCONFIGLINES.replace("%LOCATION", loc) )
+    print "Done!"
+
+
 
   def add_args(self):
-    self.parser = OptionParser(usage="usage: %prog [server] [options]", version="McoN Deamon v1.0 - By Ryan Gaus")
-
-    # action flag
-    # self.parser.add_option("-a", "--action",
-    #   action="store",
-    #   dest="action_flag",
-    #   default="status",
-    #   help="action to do for the server: start,stop,restart,attach,status,addserver,prop")
+    self.parser = OptionParser(usage="usage: %prog [server] [options]", version="McoN Deamon v1.0 - By Ryan Gaus (rgaus.net)")
 
     # start flag
     self.parser.add_option("-t", "--start",
@@ -112,19 +189,23 @@ class app(object):
       help="show server.properties")
 
 
-    # install plugin flag
-    self.parser.add_option("", "--install",
-      action="store",
-      dest="instplugin_flag",
+    # reset flag
+    self.parser.add_option("", "--reset",
+      action="store_true",
+      dest="configure_flag",
       default=False,
-      help="install plugin specified on server")
+      help="reset/create config file")
+
+    # import flag
+    self.parser.add_option("", "--import",
+      action="store",
+      dest="import_flag",
+      default=False,
+      help="import server into config file")
 
 
 
   def __init__(self):
-    # load in the json for config file
-    self.json = config_handler.load_json()
-    self.config = self.json.read()
 
     # add arguments for the script's parser
     self.add_args()
@@ -133,18 +214,33 @@ class app(object):
     (options, args) = self.parser.parse_args()
     options = vars(options)
 
+    # reset config file
+    if options.has_key("configure_flag") and options["configure_flag"]: 
+      self.reset_config()
+      return
 
-    # print "OUT", options, args
+    # import a server
+    elif options.has_key("import_flag") and options["import_flag"]: 
+      srvr.import_server( options["import_flag"] )
+      return
+
+
+    # load in the json for config file
+    self.json = config_handler.load_json()
+    self.config = self.json.read()
+
+
 
     # add server
     if options.has_key("addserver_flag") and options["addserver_flag"]: srvr.add_server()
 
     # server is good...
-    if args and (args[0].rstrip("/") in self.config["server-list"] or args[0].rstrip("/") == "all") and len(args) != 0:
+    elif args and (args[0].rstrip("/") in self.config["server-list"] or args[0].rstrip("/") == "all") and len(args) != 0:
       # server exists
       self.provide_output(args[0].rstrip("/"), options, args)
 
     else:
+      # server not good
       self.parser.error("Server Doesn't Exist, or wasn't specified.")
 
 
