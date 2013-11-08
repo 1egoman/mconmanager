@@ -1,4 +1,4 @@
-\MCONMANAGER...
+MCONMANAGER...
 ============================
 
 ...is a tool for managing multiple minecraft servers on a machine with GNU's SCREEN command for *NIX systems. 
@@ -22,5 +22,20 @@ Usage: main.py [server] [options]
 *   -e, --properties      show server.properties
 *   --reset               reset/create config file
 *   --import=SERVERNAME   import server into config file
+
+###Getting Started
+1. Clone the repository
+2. Run the mcon.sh file, with an argument of --reset
+3. Wait for the program to complete
+4. Done! You probably want to create or import a server next.
+
+###Modules Required (For Python)
+**NOTE: All modules should exsist in a fresh install of python. I have developed against 2.7.x**
+* json
+* time
+* subprocess
+* urllib2
+* optparse
+* shutil
 
 *Please note McoNManager is still in active development.*
