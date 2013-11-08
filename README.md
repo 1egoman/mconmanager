@@ -1,4 +1,4 @@
-MCONMANAGER...
+\MCONMANAGER...
 ============================
 
 ...is a tool for managing multiple minecraft servers on a machine with GNU's SCREEN command for *NIX systems. 
@@ -20,5 +20,7 @@ Usage: main.py [server] [options]
 *   -s, --status          status of server
 *   -n, --newserver       add new server
 *   -e, --properties      show server.properties
+*   --reset               reset/create config file
+*   --import=SERVERNAME   import server into config file
 
 *Please note McoNManager is still in active development.*
