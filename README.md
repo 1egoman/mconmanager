@@ -4,7 +4,7 @@ MCONMANAGER...
 ...is a tool for managing multiple minecraft servers on a machine with GNU's SCREEN command for *NIX systems. 
 
 ###Why McoNManager?
-I run a minecraft server network known as the MineCraft Open Network and I needed a program to help me manage it. 
+I used to run a minecraft server network known as the MineCraft Open Network and I needed a program to help me manage it. 
 
 ###Help Menu
 
@@ -38,4 +38,4 @@ Usage: main.py [server] [options]
 * optparse
 * shutil
 
-*Please note McoNManager is still in active development.*
+*Please note McoNManager is no longer used, and can basically be considered abandoned*
